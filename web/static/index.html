@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Koda: Path of the Storm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&family=Shippori+Mincho+B1:wght@700;800&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script src="engine.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <header class="topbar">
+    <a class="brand" href="#missions"><span class="kanji">嵐</span><span>Koda</span></a>
+    <div class="me" id="meBar" hidden>
+      <div class="lvl"><span class="lv-badge" id="meLevel">1</span><span id="meName"></span></div>
+      <div class="xp" title="Experience"><div class="xp-track"><i id="meXp"></i></div><span id="meXpText"></span></div>
+      <div class="ryo" title="Ryo"><span class="coin" aria-hidden="true"></span><b id="meRyo">0</b> ryo</div>
+      <button class="ghost" id="logout" type="button">Log out</button>
+    </div>
+  </header>
+
+  <!-- Auth -->
+  <section id="authView" class="auth" hidden>
+    <div class="auth-copy">
+      <p class="eyebrow">A turn-based ninja duel</p>
+      <h1>Path of the Storm</h1>
+      <p>Take missions, earn ryo, learn new techniques, and climb the mountain to face the Thunder Sage. Every battle is decided on the server, so every win is real.</p>
+    </div>
+    <form class="auth-card" id="authForm" novalidate>
+      <div class="seg" role="tablist">
+        <button type="button" role="tab" id="modeLogin" aria-selected="true">Log in</button>
+        <button type="button" role="tab" id="modeRegister" aria-selected="false">Create account</button>
+      </div>
+      <label for="username">Username</label>
+      <input id="username" name="username" autocomplete="username" required minlength="3" maxlength="20" placeholder="koda_fan">
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128">
+      <p class="hint" id="authHint">At least 8 characters.</p>
+      <p class="form-error" id="authError" role="alert"></p>
+      <button class="primary" id="authSubmit" type="submit">Log in</button>
+    </form>
+  </section>
+
+  <!-- Hub -->
+  <section id="hubView" hidden>
+    <div class="resume" id="resumeBar" hidden>
+      <span>You have a battle in progress against <b id="resumeFoe"></b>.</span>
+      <div><button class="primary small" id="resumeBtn" type="button">Resume</button><button class="ghost small" id="forfeitHub" type="button">Forfeit</button></div>
+    </div>
+    <nav class="tabs-nav" role="tablist">
+      <button role="tab" data-tab="missions" type="button">Missions</button>
+      <button role="tab" data-tab="techniques" type="button">Techniques</button>
+      <button role="tab" data-tab="loadout" type="button">Loadout</button>
+      <button role="tab" data-tab="leaderboard" type="button">Leaderboard</button>
+    </nav>
+    <p class="toast" id="toast" role="status" aria-live="polite"></p>
+    <div id="tab-missions" class="tab-panel"><div class="missions" id="missionList"></div></div>
+    <div id="tab-techniques" class="tab-panel" hidden>
+      <p class="sub">Buy techniques with ryo from missions. Upgrading a technique adds 15% damage or healing per rank, up to rank III.</p>
+      <div class="techs" id="techList"></div>
+    </div>
+    <div id="tab-loadout" class="tab-panel" hidden>
+      <p class="sub">Bring up to six techniques into battle. Their order sets keys 1 to 6. Click an equipped slot to remove it.</p>
+      <div class="slots" id="slots"></div>
+      <h3 class="mini">Owned techniques</h3>
+      <div class="owned" id="ownedList"></div>
+      <div class="row-actions"><button class="primary" id="saveLoadout" type="button">Save loadout</button><span class="hint" id="loadoutMsg"></span></div>
+    </div>
+    <div id="tab-leaderboard" class="tab-panel" hidden>
+      <div class="table-wrap"><table class="board"><thead><tr><th>#</th><th>Ninja</th><th>Level</th><th>Wins</th><th>Missions cleared</th></tr></thead><tbody id="board"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- Battle -->
+  <section id="battleView" hidden>
+    <div class="battle-head">
+      <div><p class="eyebrow" id="bMissionRank">Mission</p><h2 id="bMissionName"></h2></div>
+      <button class="ghost" id="forfeitBtn" type="button">Forfeit</button>
+    </div>
+    <div class="main">
+      <div class="stage-col">
+        <div class="stage" id="stageWrap">
+          <canvas id="stage" aria-label="Battle stage"></canvas>
+          <div class="hud">
+            <div class="fbar" id="hudP">
+              <div class="fname"><b id="nameP">Koda</b><span id="hpP"></span></div>
+              <div class="track"><i class="ghost-bar" id="ghP"></i><i class="fill" id="fillP"></i></div>
+              <div class="track en"><i class="fill" id="enP"></i></div>
+              <div class="stats" id="stP"></div>
+            </div>
+            <div class="fbar foe" id="hudE">
+              <div class="fname"><b id="nameE"></b><span id="hpE"></span></div>
+              <div class="track"><i class="ghost-bar" id="ghE"></i><i class="fill" id="fillE"></i></div>
+              <div class="track en"><i class="fill" id="enE"></i></div>
+              <div class="stats" id="stE"></div>
+            </div>
+          </div>
+          <div class="banner" id="banner"></div>
+          <div class="endcard" id="endcard" hidden>
+            <div class="box">
+              <h3 id="endTitle">Victory</h3>
+              <ul class="rewards" id="endRewards"></ul>
+              <div class="end-actions"><button class="primary" id="endBack" type="button">Back to missions</button><button class="ghost light" id="endAgain" type="button">Fight again</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="prompt" id="prompt"><span class="dot"></span><span id="promptText">Get ready.</span></div>
+        <div class="movebar" id="movebar"></div>
+        <label class="toggle"><input type="checkbox" id="auto"> Autoplay my turns with my strategy script</label>
+      </div>
+      <div class="panel">
+        <div class="ptabs" role="tablist">
+          <button role="tab" id="tabLog" aria-selected="true" type="button">Battle log</button>
+          <button role="tab" id="tabStrat" aria-selected="false" type="button">Strategy script</button>
+        </div>
+        <div id="paneLog"><div class="log" id="log" aria-live="polite"></div></div>
+        <div id="paneStrat" hidden>
+          <textarea id="strategy" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Strategy script"></textarea>
+          <div class="strat-bar"><button id="testStrat" type="button">Test on current turn</button><button id="resetStrat" type="button">Restore example</button></div>
+          <p class="strat-msg" id="stratMsg">Runs at the start of each of your turns when Autoplay is on. Return the id of a move.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
